@@ -94,6 +94,14 @@ public class Controller {
                 if (keyEvent.getCode().equals(KeyCode.DELETE)) {
                     //Delete or whatever you like:
                     musicsTable.getItems().remove(selectedItem);
+//                    for (Object o : musicsTable.getNa) {
+//                        o.;
+//                    }
+//                    for(int i=0;i<musicsTable.getItems().size();i++){
+//                        musicsTable.edit(i,Music(musicsTable.getItems().size() + 1,file.getName(), file.toURI().toString()));
+//                    }
+                    mediaPlayer=null;
+                    indexCurTrack = -1;
                 }
             }
         });
@@ -186,8 +194,11 @@ public class Controller {
     ChangeListener<Duration> curTimeListener = new ChangeListener<>() {
         @Override
         public void changed(ObservableValue<? extends Duration> observableValue, Duration duration, Duration t1) {
-            musicSlider.setValue(mediaPlayer.getCurrentTime().toSeconds());
-            SetTime();
+            if(mediaPlayer!=null){
+                musicSlider.setValue(mediaPlayer.getCurrentTime().toSeconds());
+                SetTime();
+            }
+
         }
     };
 
