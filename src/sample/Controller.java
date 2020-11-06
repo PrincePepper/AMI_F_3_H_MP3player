@@ -97,6 +97,8 @@ public class Controller {
                 }
             }
         });
+
+
         deleteItem.setOnAction(actionEvent -> {
             musicsTable.getItems().clear();
             mediaPlayer = null;
