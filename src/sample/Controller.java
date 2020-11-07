@@ -26,6 +26,12 @@ import java.util.List;
 public class Controller {
 
     @FXML
+    private Label title_song;
+
+    @FXML
+    private Label artist;
+
+    @FXML
     private JFXButton playButton;
 
     @FXML
@@ -63,6 +69,7 @@ public class Controller {
 
     @FXML
     private TableColumn<Music, String> pathColumn;
+
     FileChooser fileChooser;
     MediaPlayer mediaPlayer = null;
     int indexCurTrack = -1;
@@ -94,13 +101,7 @@ public class Controller {
                 if (keyEvent.getCode().equals(KeyCode.DELETE)) {
                     //Delete or whatever you like:
                     musicsTable.getItems().remove(selectedItem);
-//                    for (Object o : musicsTable.getNa) {
-//                        o.;
-//                    }
-//                    for(int i=0;i<musicsTable.getItems().size();i++){
-//                        musicsTable.edit(i,Music(musicsTable.getItems().size() + 1,file.getName(), file.toURI().toString()));
-//                    }
-                    mediaPlayer=null;
+                    mediaPlayer = null;
                     indexCurTrack = -1;
                 }
             }
@@ -114,15 +115,7 @@ public class Controller {
         });
 
 
-        select.setOnAction(actionEvent -> {
-            List<File> files = fileChooser.showOpenMultipleDialog(select.getParent().getScene().getWindow());
-            if (files != null)
-                for (var file : files) {
-                    if (file != null) {
-                        musicsTable.getItems().addAll(new Music(musicsTable.getItems().size() + 1, file.getName(), file.toURI().toString()));
-                    }
-                }
-        });
+        select.setOnAction(actionEvent -> SelectFunction());
 
         musicSlider.valueProperty().addListener(musicTimeListener);
         volumeSlider.valueProperty().addListener(volumeListener);
@@ -130,71 +123,29 @@ public class Controller {
         TableView.TableViewSelectionModel<Music> selectionModel = musicsTable.getSelectionModel();
         selectionModel.selectedItemProperty().addListener(tablelistener);
 
-        playButton.setOnAction(actionEvent -> {
-            if (mediaPlayer != null) {
-                var status = mediaPlayer.getStatus();
-                if (status == MediaPlayer.Status.PAUSED) {
-                    mediaPlayer.play();
-                } else {
-                    mediaPlayer.pause();
-                }
-            }
-        });
+        playButton.setOnAction(actionEvent -> PlayFunction());
 
-        nextButton.setOnAction(actionEvent -> {
-            if (indexCurTrack == -1)
-                return;
-            indexCurTrack++;
-            if (indexCurTrack == musicsTable.getItems().size())
-                indexCurTrack = 0;
-            Play(musicsTable.getItems().get(indexCurTrack).getPath());
-        });
+        nextButton.setOnAction(actionEvent -> rewind(true));
 
-        prevButton.setOnAction(actionEvent -> {
-            if (indexCurTrack == -1)
-                return;
-            indexCurTrack--;
-            if (indexCurTrack < 0)
-                indexCurTrack = musicsTable.getItems().size() - 1;
-            Play(musicsTable.getItems().get(indexCurTrack).getPath());
-        });
+        prevButton.setOnAction(actionEvent -> rewind(false));
     }
 
-
-    void SetTime() {
-        var sec = ((int) mediaPlayer.getCurrentTime().toSeconds()) % 60;
-        if (sec < 10) {
-            curTime = (int) mediaPlayer.getCurrentTime().toMinutes() + ":0" + sec;
-        } else {
-            curTime = (int) mediaPlayer.getCurrentTime().toMinutes() + ":" + sec;
-        }
-        curTimeLabel.setText(curTime);
-    }
-
-
-    class StyleRowFactory<T> implements Callback<TableView<T>, TableRow<T>> {
+    static class StyleRowFactory<T> implements Callback<TableView<T>, TableRow<T>> {
         @Override
         public TableRow<T> call(TableView<T> tableView) {
             return new TableRow<>() {
                 @Override
                 protected void updateItem(T paramT, boolean b) {
-                    if (getIndex() == indexCurTrack) {
-                        setStyle("-fx-background-color: #04B404;-fx-text-background-color: white;");
-
-                    } else {
-                        setStyle(null);
-                    }
                     super.updateItem(paramT, b);
                 }
             };
         }
-
     }
 
     ChangeListener<Duration> curTimeListener = new ChangeListener<>() {
         @Override
         public void changed(ObservableValue<? extends Duration> observableValue, Duration duration, Duration t1) {
-            if(mediaPlayer!=null){
+            if (mediaPlayer != null) {
                 musicSlider.setValue(mediaPlayer.getCurrentTime().toSeconds());
                 SetTime();
             }
@@ -202,25 +153,11 @@ public class Controller {
         }
     };
 
-    void Play(String path) {
-        if (mediaPlayer != null)
-            mediaPlayer.stop();
-        mediaPlayer = new MediaPlayer(new Media(path));
-        mediaPlayer.play();
-        mediaPlayer.setOnReady(() -> {
-            musicSlider.setMin(0);
-            musicSlider.setMax(mediaPlayer.getMedia().getDuration().toSeconds());
-            musicSlider.setValue(0);
-        });
-        mediaPlayer.currentTimeProperty().addListener(curTimeListener);
-        musicsTable.setRowFactory(new StyleRowFactory<>());
-        musicsTable.refresh();
-    }
-
     ChangeListener<Music> tablelistener = (val, oldVal, newVal) -> {
         if (newVal != null) {
             Play(newVal.getPath());
             indexCurTrack = newVal.number - 1;
+            title_song.setText(newVal.getName());
         }
     };
 
@@ -240,4 +177,68 @@ public class Controller {
                 mediaPlayer.setVolume(volumeSlider.getValue() / 100);
         }
     };
+
+    void rewind(boolean side) {
+        if (indexCurTrack == -1)
+            return;
+        if (side)
+            indexCurTrack++;
+        else indexCurTrack--;
+        if (indexCurTrack == musicsTable.getItems().size())
+            indexCurTrack = 0;
+        if (indexCurTrack < 0)
+            indexCurTrack = musicsTable.getItems().size() - 1;
+        Play(musicsTable.getItems().get(indexCurTrack).getPath());
+        title_song.setText(musicsTable.getItems().get(indexCurTrack).getName());
+    }
+
+
+    void Play(String path) {
+        if (mediaPlayer != null)
+            mediaPlayer.stop();
+        mediaPlayer = new MediaPlayer(new Media(path));
+        mediaPlayer.play();
+        mediaPlayer.setOnReady(() -> {
+            musicSlider.setMin(0);
+            if (mediaPlayer != null)
+                musicSlider.setMax(mediaPlayer.getMedia().getDuration().toSeconds());
+            musicSlider.setValue(0);
+        });
+        mediaPlayer.currentTimeProperty().addListener(curTimeListener);
+        musicsTable.setRowFactory(new StyleRowFactory<>());
+        musicsTable.refresh();
+    }
+
+    void SetTime() {
+        var sec = ((int) mediaPlayer.getCurrentTime().toSeconds()) % 60;
+        if (sec < 10) {
+            curTime = (int) mediaPlayer.getCurrentTime().toMinutes() + ":0" + sec;
+        } else {
+            curTime = (int) mediaPlayer.getCurrentTime().toMinutes() + ":" + sec;
+        }
+        curTimeLabel.setText(curTime);
+    }
+
+    void PlayFunction() {
+        if (mediaPlayer != null) {
+            var status = mediaPlayer.getStatus();
+            if (status == MediaPlayer.Status.PAUSED) {
+                mediaPlayer.play();
+            } else {
+                mediaPlayer.pause();
+            }
+
+        }
+    }
+
+    void SelectFunction() {
+        List<File> files = fileChooser.showOpenMultipleDialog(select.getParent().getScene().getWindow());
+        if (files != null)
+            for (var file : files) {
+                if (file != null) {
+                    musicsTable.getItems().addAll(new Music(musicsTable.getItems().size() + 1, file.getName(), file.toURI().toString()));
+                }
+            }
+    }
+
 }
