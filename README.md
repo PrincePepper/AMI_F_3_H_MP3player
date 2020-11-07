@@ -1,4 +1,4 @@
-# PMI_F_2_H_MP3player
+# PMI_F_3_H_MP3player
 java and javaFX media player
 
 Предмет «Разработка оконных приложений» 
