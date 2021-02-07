@@ -5,12 +5,6 @@ java and javaFX media player
 
 Иcползуется язык программирования Java, версия SDK: 15 и JavaFX: 11.
 
-- GUI -> suggested run code
-- controller -> object initialization
-- resources -> design
-- .iml file -> Maven dependencies
-
-
 ***The project was released for my University course***
 
 ##### My contacts:
